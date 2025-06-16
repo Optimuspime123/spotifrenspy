@@ -1,5 +1,5 @@
 
-# Spotify Web Friend Activity Viewer
+# Spotify Friend Activity Viewer (spy on your spotify frens!)
 
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
 
