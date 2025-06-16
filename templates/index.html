@@ -1,66 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title>Spotify Friend Activity</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <!-- MDB -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.min.css" />
     <style>
-        body { background-color: #121212; color: #ffffff; }
-        .card { background-color: #181818; border: 1px solid #282828; }
-        .card-title a { color: #1DB954; text-decoration: none; }
-        .card-title a:hover { text-decoration: underline; }
-        .btn-primary { background-color: #1DB954; border-color: #1DB954; }
-        .btn-primary:hover { background-color: #1ed760; border-color: #1ed760; }
-        .form-control { background-color: #282828; color: #fff; border-color: #444; }
-        a { color: #1DB954; }
-        .spinner-border { color: #1DB954; }
-        .hidden { display: none; }
+        /* Custom styles for a cleaner look */
+        .avatar {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+        }
+        .card-body .track-link {
+            font-weight: 500;
+            color: inherit;
+            text-decoration: none;
+        }
+        .card-body .track-link:hover {
+            text-decoration: underline;
+        }
+        .context-link {
+            color: #1DB954 !important;
+        }
     </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center mb-4">Spotify Friend Activity</h1>
-
-        <!-- Cookie Input Form (initially visible) -->
-        <div id="cookie-form-container" class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
-                <div class="card p-4">
-                    <h5 class="card-title">Enter Your Cookie</h5>
-                    <p class="card-text text-muted">Provide your Spotify `sp_dc` cookie. It will be stored in your browser's local storage and only sent to this server to fetch activity.</p>
-                    <form id="cookie-form">
-                        <div class="mb-3">
-                            <label for="sp_dc_cookie_input" class="form-label">sp_dc Cookie</label>
-                            <input type="password" class="form-control" id="sp_dc_cookie_input" required placeholder="Paste your cookie here...">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Save and Fetch</button>
-                    </form>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#"><i class="fab fa-spotify me-2 text-success"></i>Friend Activity</a>
+            <div class="d-flex align-items-center">
+                <!-- Theme Switch -->
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="theme-switch" />
+                    <label class="form-check-label" for="theme-switch"><i class="fas fa-sun me-2"></i> / <i class="fas fa-moon"></i></label>
                 </div>
             </div>
         </div>
-
-        <!-- Activity Display Area (initially hidden) -->
-        <div id="activity-container" class="hidden">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <button id="clear-cookie-btn" class="btn btn-sm btn-outline-danger">Clear Cookie & Reset</button>
-                <button id="refresh-btn" class="btn btn-sm btn-outline-light">Refresh</button>
-            </div>
-            
-            <div id="loading-spinner" class="text-center my-5">
-                <div class="spinner-border" role="status">
-                    <span class="visually-hidden">Loading...</span>
+    </nav>
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <!-- Cookie Input Form -->
+        <div id="cookie-form-container" class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card">
+                    <div class="card-body p-4">
+                        <h5 class="card-title">Enter Your Cookie</h5>
+                        <p class="text-muted">Provide your `sp_dc` cookie. It's stored in your browser and never shared.</p>
+                        <form id="cookie-form">
+                            <div class="form-outline mb-4" data-mdb-input-init>
+                                <input type="password" id="sp_dc_cookie_input" class="form-control" />
+                                <label class="form-label" for="sp_dc_cookie_input">sp_dc Cookie Value</label>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block" data-mdb-ripple-init>Save and Fetch</button>
+                        </form>
+                    </div>
                 </div>
+            </div>
+        </div>
+        <!-- Activity Display Area -->
+        <div id="activity-container" class="d-none">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button id="clear-cookie-btn" class="btn btn-sm btn-danger" data-mdb-ripple-init><i class="fas fa-trash me-2"></i>Clear Cookie</button>
+                <button id="refresh-btn" class="btn btn-sm btn-primary" data-mdb-ripple-init><i class="fas fa-sync-alt me-2"></i>Refresh</button>
+            </div>
+            <div id="loading-spinner" class="text-center my-5">
+                <div class="spinner-border text-success" role="status"><span class="visually-hidden">Loading...</span></div>
                 <p class="mt-2">Fetching activity...</p>
             </div>
-            
-            <div id="error-message" class="alert alert-danger hidden"></div>
-            
-            <div id="activity-list" class="list-group"></div>
+            <div id="error-message" class="alert alert-danger d-none"></div>
+            <div id="activity-list" class="row">
+                <!-- Friend cards will be inserted here by JavaScript -->
+            </div>
         </div>
     </div>
 
+    <!-- MDB -->
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.umd.min.js"></script>
+    
     <script>
-        // DOM Elements
+        // --- DOM Elements ---
+        const themeSwitch = document.getElementById('theme-switch');
         const cookieFormContainer = document.getElementById('cookie-form-container');
         const activityContainer = document.getElementById('activity-container');
         const cookieForm = document.getElementById('cookie-form');
@@ -72,17 +97,43 @@
         const activityList = document.getElementById('activity-list');
         const COOKIE_KEY = 'spotify_sp_dc_cookie';
 
-        // --- Core Logic ---
-        
-        // Function to fetch and display activity
+        // --- THEME MANAGEMENT ---
+        const getPreferredTheme = () => localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        const setTheme = (theme) => {
+            document.documentElement.setAttribute('data-mdb-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeSwitch.checked = (theme === 'dark');
+        };
+        themeSwitch.addEventListener('change', () => setTheme(themeSwitch.checked ? 'dark' : 'light'));
+        setTheme(getPreferredTheme()); // Set initial theme on load
+
+        // --- TIME FORMATTING ---
+        const timeAgo = (timestamp) => {
+            if (!timestamp) return 'N/A';
+            const now = new Date();
+            const past = new Date(timestamp);
+            const seconds = Math.floor((now - past) / 1000);
+            let interval = seconds / 31536000;
+            if (interval > 1) return Math.floor(interval) + " years ago";
+            interval = seconds / 2592000;
+            if (interval > 1) return Math.floor(interval) + " months ago";
+            interval = seconds / 86400;
+            if (interval > 1) return Math.floor(interval) + " days ago";
+            interval = seconds / 3600;
+            if (interval > 1) return Math.floor(interval) + " hours ago";
+            interval = seconds / 60;
+            if (interval > 1) return Math.floor(interval) + " minutes ago";
+            return "Just now";
+        };
+
+        // --- API & RENDERING LOGIC ---
         async function fetchActivity() {
             const storedCookie = localStorage.getItem(COOKIE_KEY);
             if (!storedCookie) {
-                showCookieForm();
+                showView('form');
                 return;
             }
-
-            showActivityContainer();
+            showView('activity');
             setLoading(true);
             setError(null);
             activityList.innerHTML = '';
@@ -93,74 +144,73 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sp_dc_cookie: storedCookie })
                 });
-
                 const data = await response.json();
-
                 if (!response.ok) {
-                    // If response is not 2xx, it's an error.
-                    // Clear the bad cookie so the user can re-enter.
                     localStorage.removeItem(COOKIE_KEY);
                     throw new Error(data.error || 'An unknown error occurred.');
                 }
-                
                 renderActivity(data.friends);
-
             } catch (error) {
                 setError(error.message);
-                // On error, show the form again so they can enter a new cookie
-                showCookieForm(); 
+                showView('form');
             } finally {
                 setLoading(false);
             }
         }
 
-        // Function to render the list of friends
         function renderActivity(friends) {
             if (!friends || friends.length === 0) {
-                activityList.innerHTML = '<div class="alert alert-info">No friend activity found, or your friends have disabled sharing.</div>';
+                activityList.innerHTML = '<div class="col-12"><div class="alert alert-info">No friend activity found.</div></div>';
                 return;
             }
-            const html = friends.map(friend => `
-                <div class="list-group-item list-group-item-action flex-column align-items-start card mb-3">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1 card-title"><a href="${friend.user_url}" target="_blank">${friend.user_name}</a></h5>
-                        <small class="text-muted">${friend.last_seen}</small>
+            const html = friends.map(friend => {
+                const fullDate = friend.timestamp ? new Date(friend.timestamp).toLocaleString() : 'N/A';
+                return `
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body d-flex p-3">
+                            <a href="${friend.user_url}" target="_blank">
+                                <img src="${friend.user_image_url}" class="rounded-circle avatar me-3" alt="${friend.user_name}" />
+                            </a>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <a href="${friend.user_url}" target="_blank" class="text-body text-decoration-none">
+                                        <strong>${friend.user_name}</strong>
+                                    </a>
+                                    <small class="text-muted" data-mdb-toggle="tooltip" title="${fullDate}">
+                                        ${timeAgo(friend.timestamp)}
+                                    </small>
+                                </div>
+                                <p class="mb-1">
+                                    <a href="${friend.track_url}" target="_blank" class="track-link">${friend.track_name}</a>
+                                    <span class="text-muted">• ${friend.artist_name}</span>
+                                </p>
+                                <small class="text-muted">
+                                    <i class="fas fa-play-circle me-1"></i> From: 
+                                    <a href="${friend.context_url}" target="_blank" class="context-link">${friend.context_name}</a>
+                                </small>
+                            </div>
+                        </div>
                     </div>
-                    <p class="mb-1">
-                        <a href="${friend.track_url}" target="_blank">${friend.track_name}</a> 
-                        <span class="text-muted">• ${friend.artist_name}</span>
-                    </p>
-                    <small class="text-muted">From: <a href="${friend.context_url}" target="_blank">${friend.context_name}</a></small>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
             activityList.innerHTML = html;
+            // Re-initialize tooltips for new elements
+            document.querySelectorAll('[data-mdb-toggle="tooltip"]').forEach(el => new mdb.Tooltip(el));
         }
 
-        // --- UI State Management ---
-        function showCookieForm() {
-            cookieFormContainer.classList.remove('hidden');
-            activityContainer.classList.add('hidden');
-        }
+        // --- UI STATE ---
+        const showView = (view) => {
+            cookieFormContainer.classList.toggle('d-none', view !== 'form');
+            activityContainer.classList.toggle('d-none', view !== 'activity');
+        };
+        const setLoading = (isLoading) => loadingSpinner.classList.toggle('d-none', !isLoading);
+        const setError = (message) => {
+            errorMessageDiv.textContent = message ? `Error: ${message}` : '';
+            errorMessageDiv.classList.toggle('d-none', !message);
+        };
 
-        function showActivityContainer() {
-            cookieFormContainer.classList.add('hidden');
-            activityContainer.classList.remove('hidden');
-        }
-
-        function setLoading(isLoading) {
-            loadingSpinner.classList.toggle('hidden', !isLoading);
-        }
-
-        function setError(message) {
-            if (message) {
-                errorMessageDiv.textContent = `Error: ${message}`;
-                errorMessageDiv.classList.remove('hidden');
-            } else {
-                errorMessageDiv.classList.add('hidden');
-            }
-        }
-
-        // --- Event Listeners ---
+        // --- EVENT LISTENERS ---
         cookieForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const cookieValue = cookieInput.value.trim();
@@ -170,25 +220,23 @@
                 fetchActivity();
             }
         });
-
         clearCookieBtn.addEventListener('click', () => {
             localStorage.removeItem(COOKIE_KEY);
-            activityList.innerHTML = '';
+            showView('form');
             setError(null);
-            showCookieForm();
         });
-
         refreshBtn.addEventListener('click', fetchActivity);
-
-        // --- Initial Load ---
+        
+        // --- INITIAL LOAD ---
         document.addEventListener('DOMContentLoaded', () => {
             if (localStorage.getItem(COOKIE_KEY)) {
                 fetchActivity();
             } else {
-                showCookieForm();
+                showView('form');
             }
+            // Initialize MDB components
+            document.querySelectorAll('[data-mdb-input-init]').forEach((input) => { new mdb.Input(input).init(); });
         });
-
     </script>
 </body>
 </html>
