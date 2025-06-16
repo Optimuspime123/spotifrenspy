@@ -1,0 +1,33 @@
+# render.yaml
+# This file configures the deployment for the Spotify Friend Activity web app on Render.
+
+services:
+  # A Web Service for our Flask application.
+  - type: web
+    # A unique name for the service.
+    name: spotifrenspy
+    
+    # The runtime environment for the service. 'python' is perfect for Flask.
+    runtime: python
+    
+    # Specify the Python version for consistency.
+    pythonVersion: "3.11"
+    
+    # The branch to deploy from. 'main' is a common choice.
+    branch: main
+    
+    # Commands to run on every build.
+    # This will install all the dependencies from requirements.txt.
+    buildCommand: "pip install -r requirements.txt"
+    
+    # The command to start the web service.
+    # We use Gunicorn, a production-ready WSGI server.
+    # 'app:app' means: run the 'app' object from the 'app.py' file.
+    startCommand: "gunicorn app:app"
+    
+    # Enable auto-deploys. When you push to the 'branch' defined above,
+    # Render will automatically build and deploy the new version.
+    autoDeploy: yes
+    
+    # The instance type to use. 'free' is sufficient for this project.
+    plan: free
