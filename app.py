@@ -70,20 +70,19 @@ def get_friend_activity(web_access_token: str) -> tuple[dict | None, str | None]
         return None, f"A network error occurred: {e}"
 
 def process_friend_activity(activity_data: dict) -> list:
+    """Parses API data and returns a list of friend dicts for the template."""
     processed_friends = []
     friends = activity_data.get('friends', [])
     for friend in friends:
-        timestamp_ms = friend.get('timestamp')
-        last_seen_str = "Timestamp not available"
-        if timestamp_ms:
-            dt_object = datetime.fromtimestamp(int(timestamp_ms) / 1000)
-            last_seen_str = dt_object.strftime("%Y-%m-%d %I:%M:%S %p")
         user = friend.get('user', {})
         track = friend.get('track', {})
+        
+        # The only change is adding 'user_image_url' here
         processed_friends.append({
+            'timestamp': friend.get('timestamp'), # Send the raw timestamp
             'user_name': user.get('name', 'Unknown User'),
             'user_url': format_spotify_uri_as_url(user.get('uri', '#')),
-            'last_seen': last_seen_str,
+            'user_image_url': user.get('imageUrl', 'https://i.scdn.co/image/ab6761610000e5eb1020c22n9ce49719111p685a'), # Default avatar
             'track_name': track.get('name', 'Unknown Track'),
             'track_url': format_spotify_uri_as_url(track.get('uri', '#')),
             'artist_name': track.get('artist', {}).get('name', 'Unknown Artist'),
