@@ -1,180 +1,194 @@
-import time
-import requests
-import pyotp
-import base64
-import os
-from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Spotify Friend Activity</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #121212; color: #ffffff; }
+        .card { background-color: #181818; border: 1px solid #282828; }
+        .card-title a { color: #1DB954; text-decoration: none; }
+        .card-title a:hover { text-decoration: underline; }
+        .btn-primary { background-color: #1DB954; border-color: #1DB954; }
+        .btn-primary:hover { background-color: #1ed760; border-color: #1ed760; }
+        .form-control { background-color: #282828; color: #fff; border-color: #444; }
+        a { color: #1DB954; }
+        .spinner-border { color: #1DB954; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Spotify Friend Activity</h1>
 
-# --- FLASK APP CONFIGURATION ---
-app = Flask(__name__)
-COOKIE_FILE = 'spotify_cookie.txt'
+        <!-- Cookie Input Form (initially visible) -->
+        <div id="cookie-form-container" class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card p-4">
+                    <h5 class="card-title">Enter Your Cookie</h5>
+                    <p class="card-text text-muted">Provide your Spotify `sp_dc` cookie. It will be stored in your browser's local storage and only sent to this server to fetch activity.</p>
+                    <form id="cookie-form">
+                        <div class="mb-3">
+                            <label for="sp_dc_cookie_input" class="form-label">sp_dc Cookie</label>
+                            <input type="password" class="form-control" id="sp_dc_cookie_input" required placeholder="Paste your cookie here...">
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Save and Fetch</button>
+                    </form>
+                </div>
+            </div>
+        </div>
 
-# --- CORE SPOTIFY LOGIC (Mostly from your script) ---
+        <!-- Activity Display Area (initially hidden) -->
+        <div id="activity-container" class="hidden">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <button id="clear-cookie-btn" class="btn btn-sm btn-outline-danger">Clear Cookie & Reset</button>
+                <button id="refresh-btn" class="btn btn-sm btn-outline-light">Refresh</button>
+            </div>
+            
+            <div id="loading-spinner" class="text-center my-5">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Fetching activity...</p>
+            </div>
+            
+            <div id="error-message" class="alert alert-danger hidden"></div>
+            
+            <div id="activity-list" class="list-group"></div>
+        </div>
+    </div>
 
-def format_spotify_uri_as_url(uri: str) -> str:
-    """Converts any Spotify URI to a clickable web URL."""
-    if not isinstance(uri, str) or not uri.startswith('spotify:'):
-        return uri
-    path_part = uri.split(':', 1)[1]
-    url_path = path_part.replace(':', '/')
-    return f"https://open.spotify.com/{url_path}"
+    <script>
+        // DOM Elements
+        const cookieFormContainer = document.getElementById('cookie-form-container');
+        const activityContainer = document.getElementById('activity-container');
+        const cookieForm = document.getElementById('cookie-form');
+        const cookieInput = document.getElementById('sp_dc_cookie_input');
+        const clearCookieBtn = document.getElementById('clear-cookie-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorMessageDiv = document.getElementById('error-message');
+        const activityList = document.getElementById('activity-list');
+        const COOKIE_KEY = 'spotify_sp_dc_cookie';
 
-def generate_spotify_totp(timestamp_seconds: int) -> str:
-    """Replicates the TOTP generation logic. DO NOT CHANGE THIS FUNCTION."""
-    secret_cipher = [12, 56, 76, 33, 88, 44, 88, 33, 78, 78, 11, 66, 22, 22, 55, 69, 54]
-    processed = [byte ^ ((i % 33) + 9) for i, byte in enumerate(secret_cipher)]
-    processed_str = "".join(map(str, processed))
-    utf8_bytes = processed_str.encode('utf-8')
-    hex_str = utf8_bytes.hex()
-    secret_bytes = bytes.fromhex(hex_str)
-    b32_secret = base64.b32encode(secret_bytes).decode('utf-8')
-    totp = pyotp.TOTP(b32_secret)
-    return totp.at(timestamp_seconds)
-
-def get_spotify_access_token(sp_dc_cookie: str) -> tuple[str | None, str | None]:
-    """Gets the Spotify access token. Returns (token, error_message)."""
-    session = requests.Session()
-    jar = requests.cookies.RequestsCookieJar()
-    jar.set('sp_dc', sp_dc_cookie, domain='.spotify.com', path='/')
-    session.cookies = jar
-    session.headers.update({
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'App-Platform': 'WebPlayer'
-    })
-
-    now_ts_seconds = int(time.time())
-    code = generate_spotify_totp(now_ts_seconds)
-
-    params = {
-        'reason': 'init', 'productType': 'web-player', 'totp': code, 'totpServerTime': now_ts_seconds,
-        'totpVer': '5', 'sTime': now_ts_seconds, 'cTime': now_ts_seconds * 1000,
-        'buildVer': 'web-player_2024-06-12_1749598284688_68a7f1a', 'buildDate': '2024-06-12'
-    }
-    url = 'https://open.spotify.com/api/token'
-
-    try:
-        resp = session.get(url, params=params, allow_redirects=False)
-        resp.raise_for_status() # Raises HTTPError for bad responses (4xx or 5xx)
-        token_data = resp.json()
-        access_token = token_data.get('accessToken')
-        if access_token:
-            return access_token, None
-        else:
-            return None, "Token request succeeded, but no 'accessToken' in response."
-    except requests.exceptions.HTTPError as e:
-        error_detail = f"Failed to get token: {e.response.status_code}. This might mean your sp_dc cookie is invalid or expired."
-        return None, error_detail
-    except requests.exceptions.RequestException as e:
-        return None, f"A network error occurred: {e}"
-
-def get_friend_activity(web_access_token: str) -> tuple[dict | None, str | None]:
-    """Fetches friend activity. Returns (activity_data, error_message)."""
-    url = 'https://guc-spclient.spotify.com/presence-view/v1/buddylist'
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Authorization': f'Bearer {web_access_token}'
-    }
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.json(), None
-    except requests.exceptions.HTTPError as e:
-        return None, f"HTTP error fetching friend activity: {e}"
-    except requests.exceptions.RequestException as e:
-        return None, f"A network error occurred: {e}"
-
-
-# --- WEB ADAPTED FUNCTIONS ---
-
-def read_cookie_from_file() -> str | None:
-    """Reads the sp_dc cookie from the local file."""
-    if os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 0:
-        with open(COOKIE_FILE, 'r') as f:
-            return f.read().strip()
-    return None
-
-def save_cookie_to_file(cookie: str):
-    """Saves the sp_dc cookie to the local file."""
-    with open(COOKIE_FILE, 'w') as f:
-        f.write(cookie)
-
-def clear_cookie_file():
-    """Deletes the cookie file."""
-    if os.path.exists(COOKIE_FILE):
-        os.remove(COOKIE_FILE)
-
-def process_friend_activity(activity_data: dict) -> list:
-    """Parses API data and returns a list of friend dicts for the template."""
-    processed_friends = []
-    friends = activity_data.get('friends', [])
-    for friend in friends:
-        timestamp_ms = friend.get('timestamp')
-        last_seen_str = "Timestamp not available"
-        if timestamp_ms:
-            dt_object = datetime.fromtimestamp(int(timestamp_ms) / 1000)
-            last_seen_str = dt_object.strftime("%Y-%m-%d %I:%M:%S %p")
-
-        user = friend.get('user', {})
-        track = friend.get('track', {})
-        context = track.get('context', {})
+        // --- Core Logic ---
         
-        processed_friends.append({
-            'user_name': user.get('name', 'Unknown User'),
-            'user_url': format_spotify_uri_as_url(user.get('uri', '#')),
-            'image_url': user.get('imageUrl', 'https://i.scdn.co/image/ab6761610000e5eb1020c22n9ce49719111p685a'), # Placeholder
-            'last_seen': last_seen_str,
-            'track_name': track.get('name', 'Unknown Track'),
-            'track_url': format_spotify_uri_as_url(track.get('uri', '#')),
-            'artist_name': track.get('artist', {}).get('name', 'Unknown Artist'),
-            'album_name': track.get('album', {}).get('name', 'Unknown Album'),
-            'context_name': context.get('name', 'N/A'),
-            'context_url': format_spotify_uri_as_url(context.get('uri', '#')),
-        })
-    return processed_friends
+        // Function to fetch and display activity
+        async function fetchActivity() {
+            const storedCookie = localStorage.getItem(COOKIE_KEY);
+            if (!storedCookie) {
+                showCookieForm();
+                return;
+            }
 
+            showActivityContainer();
+            setLoading(true);
+            setError(null);
+            activityList.innerHTML = '';
 
-# --- FLASK ROUTES ---
+            try {
+                const response = await fetch('/api/activity', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sp_dc_cookie: storedCookie })
+                });
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    error_message = None
-    sp_dc_cookie = read_cookie_from_file()
+                const data = await response.json();
 
-    if request.method == 'POST':
-        # User is submitting a new cookie
-        new_cookie = request.form.get('sp_dc_cookie')
-        if new_cookie:
-            save_cookie_to_file(new_cookie)
-            return redirect(url_for('index'))
-        else:
-            error_message = "Cookie field cannot be empty."
-    
-    if not sp_dc_cookie:
-        # No cookie saved, show the form
-        return render_template('index.html', show_form=True, error=error_message)
+                if (!response.ok) {
+                    // If response is not 2xx, it's an error.
+                    // Clear the bad cookie so the user can re-enter.
+                    localStorage.removeItem(COOKIE_KEY);
+                    throw new Error(data.error || 'An unknown error occurred.');
+                }
+                
+                renderActivity(data.friends);
 
-    # Cookie exists, try to fetch activity
-    access_token, error_message = get_spotify_access_token(sp_dc_cookie)
-    if not access_token:
-        # Token failed, clear the bad cookie and show form with error
-        clear_cookie_file()
-        return render_template('index.html', show_form=True, error=error_message)
+            } catch (error) {
+                setError(error.message);
+                // On error, show the form again so they can enter a new cookie
+                showCookieForm(); 
+            } finally {
+                setLoading(false);
+            }
+        }
 
-    friend_activity_data, error_message = get_friend_activity(access_token)
-    if not friend_activity_data:
-        # Friend activity fetch failed
-        return render_template('index.html', error=error_message, sp_dc_cookie=sp_dc_cookie)
+        // Function to render the list of friends
+        function renderActivity(friends) {
+            if (!friends || friends.length === 0) {
+                activityList.innerHTML = '<div class="alert alert-info">No friend activity found, or your friends have disabled sharing.</div>';
+                return;
+            }
+            const html = friends.map(friend => `
+                <div class="list-group-item list-group-item-action flex-column align-items-start card mb-3">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1 card-title"><a href="${friend.user_url}" target="_blank">${friend.user_name}</a></h5>
+                        <small class="text-muted">${friend.last_seen}</small>
+                    </div>
+                    <p class="mb-1">
+                        <a href="${friend.track_url}" target="_blank">${friend.track_name}</a> 
+                        <span class="text-muted">• ${friend.artist_name}</span>
+                    </p>
+                    <small class="text-muted">From: <a href="${friend.context_url}" target="_blank">${friend.context_name}</a></small>
+                </div>
+            `).join('');
+            activityList.innerHTML = html;
+        }
 
-    # All successful, process and display data
-    friends = process_friend_activity(friend_activity_data)
-    return render_template('index.html', friends=friends, sp_dc_cookie=sp_dc_cookie)
+        // --- UI State Management ---
+        function showCookieForm() {
+            cookieFormContainer.classList.remove('hidden');
+            activityContainer.classList.add('hidden');
+        }
 
-@app.route('/clear')
-def clear_cookie():
-    """Route to clear the stored cookie and start over."""
-    clear_cookie_file()
-    return redirect(url_for('index'))
+        function showActivityContainer() {
+            cookieFormContainer.classList.add('hidden');
+            activityContainer.classList.remove('hidden');
+        }
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+        function setLoading(isLoading) {
+            loadingSpinner.classList.toggle('hidden', !isLoading);
+        }
+
+        function setError(message) {
+            if (message) {
+                errorMessageDiv.textContent = `Error: ${message}`;
+                errorMessageDiv.classList.remove('hidden');
+            } else {
+                errorMessageDiv.classList.add('hidden');
+            }
+        }
+
+        // --- Event Listeners ---
+        cookieForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const cookieValue = cookieInput.value.trim();
+            if (cookieValue) {
+                localStorage.setItem(COOKIE_KEY, cookieValue);
+                cookieInput.value = '';
+                fetchActivity();
+            }
+        });
+
+        clearCookieBtn.addEventListener('click', () => {
+            localStorage.removeItem(COOKIE_KEY);
+            activityList.innerHTML = '';
+            setError(null);
+            showCookieForm();
+        });
+
+        refreshBtn.addEventListener('click', fetchActivity);
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem(COOKIE_KEY)) {
+                fetchActivity();
+            } else {
+                showCookieForm();
+            }
+        });
+
+    </script>
+</body>
+</html>
