@@ -17,7 +17,7 @@ def format_spotify_uri_as_url(uri: str) -> str:
     return f"https://open.spotify.com/{url_path}"
 
 def generate_spotify_totp(timestamp_seconds: int) -> str:
-    secret_cipher = [12, 56, 76, 33, 88, 44, 88, 33, 78, 78, 11, 66, 22, 22, 55, 69, 54]
+    secret_cipher = [37, 84, 32, 76, 87, 90, 87, 47, 13, 75, 48, 54, 44, 28, 19, 21, 22] #v8
     processed = [byte ^ ((i % 33) + 9) for i, byte in enumerate(secret_cipher)]
     processed_str = "".join(map(str, processed))
     utf8_bytes = processed_str.encode('utf-8')
