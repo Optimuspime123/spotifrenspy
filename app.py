@@ -20,7 +20,7 @@ def format_spotify_uri_as_url(uri: str) -> str:
 
 def generate_spotify_totp(timestamp_seconds: int) -> str:
     """Replicates the TOTP generation logic for version 10."""
-    secret_string = "=n:b#OuEfH\\fE])e*K"
+    secret_string = "kQ19C]WQEC(]02.[^q)lMk\""
     processed = [ord(char) ^ ((i % 33) + 9) for i, char in enumerate(secret_string)]
     processed_str = "".join(map(str, processed))
     utf8_bytes = processed_str.encode('utf-8')
@@ -64,7 +64,7 @@ def get_spotify_access_token(sp_dc_cookie: str) -> tuple[str | None, str | None]
         'totp': totp_local,
         'totpServer': totp_server,
         'totpServerTime': server_ts_seconds,
-        'totpVer': '10',
+        'totpVer': '12',
         'sTime': now_ts_seconds,
         'cTime': now_ts_seconds * 1000,
         'buildVer': 'web-player_2024-06-12_1749598284688_68a7f1a',
