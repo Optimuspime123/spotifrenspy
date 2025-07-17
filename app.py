@@ -19,8 +19,8 @@ def format_spotify_uri_as_url(uri: str) -> str:
 
 
 def generate_spotify_totp(timestamp_seconds: int) -> str:
-    """Replicates the TOTP generation logic for version 10."""
-    secret_string = ";\\@FcNuKcgtCg3W?];F- "
+    """Replicates the TOTP generation logic for version 16."""
+    secret_string = "#7g i/T'ea(WC^ XWdV"
     processed = [ord(char) ^ ((i % 33) + 9) for i, char in enumerate(secret_string)]
     processed_str = "".join(map(str, processed))
     utf8_bytes = processed_str.encode('utf-8')
@@ -30,7 +30,7 @@ def generate_spotify_totp(timestamp_seconds: int) -> str:
 
 
 def get_spotify_access_token(sp_dc_cookie: str) -> tuple[str | None, str | None]:
-    """Gets a Spotify web access token using the sp_dc cookie and v10 TOTP logic."""
+    """Gets a Spotify web access token using the sp_dc cookie and v16 TOTP logic."""
     session = requests.Session()
     jar = requests.cookies.RequestsCookieJar()
     jar.set('sp_dc', sp_dc_cookie, domain='.spotify.com', path='/')
@@ -64,7 +64,7 @@ def get_spotify_access_token(sp_dc_cookie: str) -> tuple[str | None, str | None]
         'totp': totp_local,
         'totpServer': totp_server,
         'totpServerTime': server_ts_seconds,
-        'totpVer': '12',
+        'totpVer': '16',
         'sTime': now_ts_seconds,
         'cTime': now_ts_seconds * 1000,
         'buildVer': 'web-player_2024-06-12_1749598284688_68a7f1a',
