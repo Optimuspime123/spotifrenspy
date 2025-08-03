@@ -19,8 +19,8 @@ def format_spotify_uri_as_url(uri: str) -> str:
 
 
 def generate_spotify_totp(timestamp_seconds: int) -> str:
-    """Replicates the TOTP generation logic for version 20."""
-    secret_string = "0'Ep-k`^9(3zb|weR"
+    """Replicates the TOTP generation logic for version 24."""
+    secret_string = "L(N]nu\\-%E3U9ZIivoT{<X"
     processed = [ord(char) ^ ((i % 33) + 9) for i, char in enumerate(secret_string)]
     processed_str = "".join(map(str, processed))
     utf8_bytes = processed_str.encode('utf-8')
@@ -156,4 +156,5 @@ def get_activity():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
+
 
