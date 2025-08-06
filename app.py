@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 SECRETS_URL = "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/main/secrets/secrets.json"
 FALLBACK_SECRET = "qR@.~y>1Wl$GEVP7^UmG )-" #v25, last known
-LATEST_SPOTIFY_SECRET = None
+LATEST_SPOTIFY_SECRET = qR@.~y>1Wl$GEVP7^UmG )-
 
 def fetch_and_set_latest_secret():
     global LATEST_SPOTIFY_SECRET
@@ -160,3 +160,4 @@ def get_activity():
 if __name__ == '__main__':
     fetch_and_set_latest_secret()
     app.run(debug=True, port=5001)
+
