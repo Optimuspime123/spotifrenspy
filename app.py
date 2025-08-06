@@ -5,22 +5,41 @@ import base64
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
 
-# --- FLASK APP CONFIGURATION ---
 app = Flask(__name__)
 
+SECRETS_URL = "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/main/secrets/secrets.json"
+FALLBACK_SECRET = "qR@.~y>1Wl$GEVP7^UmG )-" #v25, last known
+LATEST_SPOTIFY_SECRET = None
 
+def fetch_and_set_latest_secret():
+    global LATEST_SPOTIFY_SECRET
+    try:
+        print("Fetching latest Spotify secrets...")
+        response = requests.get(SECRETS_URL, timeout=10)
+        response.raise_for_status()
+        secrets_data = response.json()
+        
+        if not secrets_data:
+            raise ValueError("Secrets data is empty.")
+            
+        latest_secret_obj = max(secrets_data, key=lambda x: x['version'])
+        LATEST_SPOTIFY_SECRET = latest_secret_obj['secret']
+        
+        print(f"Successfully loaded Spotify secret version {latest_secret_obj['version']}.")
+
+    except (requests.exceptions.RequestException, ValueError, KeyError) as e:
+        print(f"!!! WARNING: Could not fetch latest Spotify secret: {e}")
+        print(f"!!! Using fallback secret.")
+        LATEST_SPOTIFY_SECRET = FALLBACK_SECRET
 
 def format_spotify_uri_as_url(uri: str) -> str:
-    """Converts any Spotify URI (e.g., spotify:user:xyz) to a clickable web URL."""
     if not isinstance(uri, str) or not uri.startswith('spotify:'): return uri
     path_part = uri.split(':', 1)[1]
     url_path = path_part.replace(':', '/')
     return f"https://open.spotify.com/{url_path}"
 
-
 def generate_spotify_totp(timestamp_seconds: int) -> str:
-    """Replicates the TOTP generation logic for version 24."""
-    secret_string = "L(N]nu\\-%E3U9ZIivoT{<X"
+    secret_string = LATEST_SPOTIFY_SECRET
     processed = [ord(char) ^ ((i % 33) + 9) for i, char in enumerate(secret_string)]
     processed_str = "".join(map(str, processed))
     utf8_bytes = processed_str.encode('utf-8')
@@ -28,9 +47,7 @@ def generate_spotify_totp(timestamp_seconds: int) -> str:
     totp = pyotp.TOTP(b32_secret)
     return totp.at(timestamp_seconds)
 
-
 def get_spotify_access_token(sp_dc_cookie: str) -> tuple[str | None, str | None]:
-    """Gets a Spotify web access token using the sp_dc cookie and v16 TOTP logic."""
     session = requests.Session()
     jar = requests.cookies.RequestsCookieJar()
     jar.set('sp_dc', sp_dc_cookie, domain='.spotify.com', path='/')
@@ -40,24 +57,19 @@ def get_spotify_access_token(sp_dc_cookie: str) -> tuple[str | None, str | None]
         'App-Platform': 'WebPlayer'
     })
 
-    
     now_ts_seconds = int(time.time())
     server_ts_seconds = now_ts_seconds
     try:
         server_time_response = session.get('https://open.spotify.com/api/server-time', timeout=5)
         if server_time_response.ok:
             server_time_data = server_time_response.json()
-            # Convert milliseconds to seconds, with fallback to local time
             server_ts_seconds = int(server_time_data.get('timestamp', now_ts_seconds * 1000)) // 1000
     except requests.exceptions.RequestException:
-        # Fallback: if server time fails, use local time for both (see librespot issue #1475) 
         pass
 
-    # Generate TOTPs
     totp_local = generate_spotify_totp(now_ts_seconds)
     totp_server = generate_spotify_totp(server_ts_seconds)
 
-   
     params = {
         'reason': 'init',
         'productType': 'web-player',
@@ -90,9 +102,7 @@ def get_spotify_access_token(sp_dc_cookie: str) -> tuple[str | None, str | None]
     except requests.exceptions.RequestException as e:
         return None, f"A network error occurred while getting the token: {e}"
 
-# --- UNCHANGED FUNCTIONS ---
 def get_friend_activity(web_access_token: str) -> tuple[dict | None, str | None]:
-    """Fetches the friend activity feed using a web access token."""
     url = 'https://guc-spclient.spotify.com/presence-view/v1/buddylist'
     headers = {'Authorization': f'Bearer {web_access_token}'}
     try:
@@ -105,7 +115,6 @@ def get_friend_activity(web_access_token: str) -> tuple[dict | None, str | None]
         return None, f"A network error occurred while fetching activity: {e}"
 
 def process_friend_activity(activity_data: dict) -> list:
-    """Parses API data and returns a list of friend dicts for the template."""
     processed_friends = []
     friends = activity_data.get('friends', [])
     for friend in friends:
@@ -124,37 +133,30 @@ def process_friend_activity(activity_data: dict) -> list:
         })
     return processed_friends
 
-# --- FLASK ROUTES ---
 @app.route('/')
 def index():
-    """Serves the main HTML page which contains all the client-side logic."""
     return render_template('index.html')
 
 @app.route('/api/activity', methods=['POST'])
 def get_activity():
-    """API endpoint that receives the cookie and returns activity or an error."""
     data = request.get_json()
     if not data or 'sp_dc_cookie' not in data:
         return jsonify({"error": "sp_dc_cookie not provided."}), 400
 
     sp_dc_cookie = data['sp_dc_cookie']
 
-    # Step 1: Get Access Token
     access_token, error = get_spotify_access_token(sp_dc_cookie)
     if error:
-        return jsonify({"error": error}), 401 # Unauthorized
+        return jsonify({"error": error}), 401
 
-    # Step 2: Get Friend Activity
     friend_activity_data, error = get_friend_activity(access_token)
     if error:
-        return jsonify({"error": error}), 500 # Server error
+        return jsonify({"error": error}), 500
 
-    # Step 3: Process and return data
     friends = process_friend_activity(friend_activity_data)
     return jsonify({"friends": friends})
 
 
 if __name__ == '__main__':
+    fetch_and_set_latest_secret()
     app.run(debug=True, port=5001)
-
-
