@@ -236,10 +236,6 @@ def get_activity():
     return jsonify({"friends": friends})
 
 
-# Optional: also warm secrets on first request (import-time fetch already covers most cases)
-@app.before_first_request
-def _warm_secrets():
-    fetch_and_set_latest_secret()
 
 
 # -----------------------------
@@ -248,3 +244,4 @@ def _warm_secrets():
 if __name__ == '__main__':
     # On Render/Gunicorn this block won't run; import-time fetch handles secrets there.
     app.run(debug=True, port=5001)
+
