@@ -12,7 +12,7 @@ app = Flask(__name__)
 # Config
 # -----------------------------
 SECRETS_URL = "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/main/secrets/secrets.json"
-FALLBACK_SECRET = "X:<1zK2J|Oq2WLE3JNG`.},sdQ.%."  # v28, last known
+FALLBACK_SECRET = "4x]G -{$SKtXjMT2"  # v29, last known
 LATEST_SPOTIFY_SECRET = FALLBACK_SECRET
 
 # Refresh secrets every 6 hours
@@ -244,4 +244,5 @@ def get_activity():
 if __name__ == '__main__':
     # On Render/Gunicorn this block won't run; import-time fetch handles secrets there.
     app.run(debug=True, port=5001)
+
 
