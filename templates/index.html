@@ -11,153 +11,253 @@
     <!-- MDB -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/7.3.2/mdb.min.css" />
     <style>
-        :root {
-            --spotify-green: #1DB954;
-            --spotify-black: #121212;
-            --spotify-dark: #181818;
-            --spotify-grey: #535353;
-            --spotify-light: #b3b3b3;
+        /* ===========================  
+           Liquid Glass CSS – refined drop-in (less tacky, more elegant)  
+           =========================== */  
+        
+        /* Tokens */  
+        :root{  
+          --spotify-green:#1DB954;  
+          --spotify-black:#121212;  
+          --spotify-dark:#181818;  
+          --spotify-grey:#535353;  
+          --spotify-light:#b3b3b3;  
+        
+          /* Liquid Glass knobs (tuned for subtlety) */  
+          --lg-blur:8px;                 /* Balanced for perf & feel */  
+          --lg-sat:140%;                 /* Softer saturation */  
+          --lg-radius:16px;  
+          --lg-shadow:0 8px 24px rgba(0,0,0,.12);  
+          --lg-inner:inset 0 1px 0 rgba(255,255,255,.06);  
+          --lg-press:scale(.98);  
+          --lg-highlight:rgba(255,255,255,.08);  
+          --lg-glow:rgba(29,185,84,.08);  
+        }  
+        
+        /* Theme-aware material colors */  
+        html[data-mdb-theme='dark']{  
+          --lg-surface:rgba(18,18,18,.45);  
+          --lg-surface-solid:#1a1a1a;  
+          --lg-stroke:rgba(255,255,255,.08);  
+          --lg-border1:rgba(255,255,255,.25);  
+          --lg-border2:rgba(29,185,84,.18);  
+          --lg-highlight:rgba(255,255,255,.10);  
+          --lg-glow:rgba(29,185,84,.12);  
+          --lg-text-muted:#b3b3b3;  
+          /* Green arrows for accordions */
+          --mdb-accordion-icon-color: var(--spotify-green);
+          --mdb-accordion-icon-active-color: var(--spotify-green);
+        }  
+        html[data-mdb-theme='light']{  
+          --lg-surface:rgba(255,255,255,.55);  
+          --lg-surface-solid:#ffffff;  
+          --lg-stroke:rgba(0,0,0,.05);  
+          --lg-border1:rgba(255,255,255,.75);  
+          --lg-border2:rgba(29,185,84,.22);  
+          --lg-highlight:rgba(255,255,255,.18);  
+          --lg-glow:rgba(29,185,84,.15);  
+          --lg-text-muted:#616161;  
+          /* Green arrows */
+          --mdb-accordion-icon-color: var(--spotify-green);
+          --mdb-accordion-icon-active-color: var(--spotify-green);
+        }  
+        
+        /* Override MDB accordion arrows to green */
+        .accordion-button::after {
+          filter: brightness(0) saturate(100%) invert(54%) sepia(84%) saturate(2872%) hue-rotate(79deg) brightness(95%) contrast(101%);
         }
-
-        html, body {
-            height: 100%;
-            background: radial-gradient(1200px 600px at 10% -10%, rgba(29,185,84,0.12), transparent 40%),
-                        radial-gradient(900px 500px at 110% -20%, rgba(25,20,20,0.2), transparent 40%);
+        .accordion-button:not(.collapsed)::after {
+          filter: brightness(0) saturate(100%) invert(34%) sepia(93%) saturate(2872%) hue-rotate(79deg) brightness(95%) contrast(101%);
         }
-
-        .navbar {
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            backdrop-filter: blur(8px);
-        }
-
-        .navbar-brand {
-            letter-spacing: .2px;
-            font-weight: 700;
-        }
-
-        .brand-dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            background: var(--spotify-green);
-            border-radius: 50%;
-            margin-left: 6px;
-        }
-
-        .container-narrow {
-            max-width: 880px;
-        }
-
-        .avatar { width: 52px; height: 52px; object-fit: cover; }
-        .card {
-            background: rgba(18,18,18,0.6);
-            border: 1px solid rgba(255,255,255,0.08);
-            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-        }
-        html[data-mdb-theme='light'] .card {
-            background: #ffffff;
-            border-color: rgba(0,0,0,0.06);
-        }
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            border-color: rgba(29,185,84,0.35);
-        }
-
-        .card-title {
-            font-weight: 700;
-        }
-
-        .track-link { font-weight: 600; color: inherit; text-decoration: none; }
-        .track-link:hover { text-decoration: underline; }
-
-        .context-link { color: var(--spotify-green) !important; }
-
-        .accordion-button:not(.collapsed) {
-            color: var(--spotify-green);
-            background-color: rgba(29, 185, 84, 0.08);
-        }
-
-        .code-block {
-            background-color: rgba(0,0,0,0.12);
-            padding: 0.3rem 0.55rem;
-            border-radius: 0.35rem;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: .9rem;
-        }
-        html[data-mdb-theme='light'] .code-block { background-color: rgba(0,0,0,0.06); }
-        html[data-mdb-theme='dark'] .code-block { background-color: rgba(255,255,255,0.08); }
-
-        .btn-success {
-            background-color: var(--spotify-green);
-            border-color: var(--spotify-green);
-        }
-        .btn-success:hover {
-            filter: brightness(1.05);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.15);
-            color: inherit;
-        }
-        html[data-mdb-theme='light'] .btn-ghost {
-            border-color: rgba(0,0,0,0.12);
-        }
-        .btn-ghost:hover {
-            border-color: var(--spotify-green);
-            color: var(--spotify-green);
-        }
-
-        .muted {
-            color: var(--spotify-light);
-        }
-
-        .section-heading {
-            font-weight: 800;
-            letter-spacing: .2px;
-        }
-
-        .pill {
-            display: inline-flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .35rem .7rem;
-            border-radius: 999px;
-            background: rgba(29,185,84,0.12);
-            color: var(--spotify-green);
-            font-size: .85rem;
-            font-weight: 600;
-        }
-
-        .glass {
-            background: rgba(18,18,18,0.5) !important;
-            border: 1px solid rgba(255,255,255,0.08) !important;
-            backdrop-filter: blur(8px);
-        }
-
-        .tooltip-inner {
-            background: #2a2a2a;
-        }
-
-        .form-outline .form-control ~ .form-label {
-            color: var(--spotify-light);
-        }
-
-        .empty-state {
-            border: 1px dashed rgba(255,255,255,0.2);
-            border-radius: .75rem;
-            padding: 2rem;
-            text-align: center;
-        }
-        html[data-mdb-theme='light'] .empty-state {
-            border-color: rgba(0,0,0,0.12);
-        }
+        
+        /* Background: subtle caustic vibes */  
+        html,body{  
+          height:100%;  
+          background:  
+            radial-gradient(1200px 700px at 8% -10%, rgba(29,185,84,.08), transparent 40%),  
+            radial-gradient(900px 520px at 110% -20%, rgba(25,20,20,.15), transparent 50%),  
+            conic-gradient(from 220deg at 80% 10%, rgba(255,255,255,.04), transparent 40%, rgba(255,255,255,.03));  
+        }  
+        body::before{  
+          content:"";  
+          position:fixed; inset:-20% -20% auto -20%; height:120%;  
+          pointer-events:none; z-index:-1;  
+          background:  
+            conic-gradient(from 0deg at 50% 50%,  
+              rgba(255,255,255,.03), transparent 18%,  
+              rgba(255,255,255,.02) 35%, transparent 52%,  
+              rgba(29,185,84,.04) 70%, transparent 88%, rgba(255,255,255,.02));  
+          filter:blur(40px);  
+          animation:lg-slow 60s linear infinite;  
+        }  
+        @media (prefers-reduced-motion:reduce){  
+          body::before{animation:none}  
+        }  
+        @keyframes lg-slow{to{transform:rotate(360deg)}}  
+        
+        /* Utility: elegant glass surface */  
+        .lg-surface{  
+          position:relative;  
+          isolation: isolate;  
+          border:1px solid transparent;  
+          background:  
+            linear-gradient(180deg, var(--lg-surface), color-mix(in oklab, var(--lg-surface) 98%, transparent)) padding-box,  
+            linear-gradient(135deg, var(--lg-border1), var(--lg-border2)) border-box;  
+          -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));  
+          backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));  
+          box-shadow: var(--lg-shadow), var(--lg-inner);  
+          border-radius: var(--lg-radius);  
+          transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);  
+          background-clip: padding-box, border-box;  
+        }  
+        .lg-surface::after{  
+          content:"";  
+          position:absolute; inset:0; pointer-events:none; border-radius:inherit; z-index:-1;  
+          background:  
+            radial-gradient(ellipse 60% 30% at 20% 10%, var(--lg-highlight), transparent 60%),  
+            radial-gradient(ellipse 40% 20% at 80% 80%, var(--lg-glow), transparent 70%);  
+          opacity:.8;  
+          transition: opacity .2s ease, transform .4s cubic-bezier(0.4, 0, 0.2, 1);  
+        }  
+        .lg-hover:hover{  
+          transform: translateY(-1px);  
+          box-shadow: 0 12px 32px rgba(0,0,0,.16), var(--lg-inner);  
+        }  
+        .lg-hover:hover::after{  
+          /* Subtle one-shot light bend on hover */  
+          animation: liquid-bend 0.6s ease-out;  
+          opacity: 1;  
+        }  
+        @keyframes liquid-bend{  
+          0%{ transform: scale(1) translateX(0); }  
+          40%{ transform: scale(1.005) translateX(2px) skewX(-1deg); opacity: 1; }  
+          100%{ transform: scale(1) translateX(4px) skewX(0deg); opacity: .9; }  
+        }  
+        .lg-press:active{ transform: var(--lg-press); }  
+        
+        /* NAVBAR */  
+        .navbar{  
+          border-bottom:1px solid var(--lg-stroke);  
+          backdrop-filter: blur(6px) saturate(120%);  
+          -webkit-backdrop-filter: blur(6px) saturate(120%);  
+        }  
+        .navbar.glass{  
+          border-radius:0;  
+          composes: lg-surface lg-hover from none;  
+        }  
+        
+        /* Glass elements */  
+        .card, .accordion-item, .tooltip-inner, .empty-state, .glass{  
+          composes: lg-surface from none;  
+          position: relative;  
+        }  
+        .card:hover{  
+          box-shadow: 0 14px 36px rgba(0,0,0,.18), var(--lg-inner);  
+        }  
+        .card:active{ transform: var(--lg-press); }  
+        .glass:hover::after{ animation: liquid-bend 0.6s ease-out; }  
+        .accordion-button:not(.collapsed){  
+          color:var(--spotify-green);  
+          background: color-mix(in oklab, var(--spotify-green) 8%, transparent);  
+          border-radius: calc(var(--lg-radius) - 1px);  
+          composes: lg-hover from none;  
+        }  
+        .accordion-button{  
+          border-radius: var(--lg-radius);  
+        }  
+        .accordion-body{  
+          background: color-mix(in oklab, var(--lg-surface) 99%, transparent);  
+          border-radius: 0 0 var(--lg-radius) var(--lg-radius);  
+        }  
+        
+        /* Layout & basics */  
+        .navbar-brand{letter-spacing:.2px;font-weight:700}  
+        .brand-dot{ width:8px;height:8px;background:var(--spotify-green);border-radius:50%;margin-left:6px }  
+        .container-narrow{ max-width:880px }  
+        .avatar{ width:52px;height:52px;object-fit:cover;border-radius:50%;  
+          box-shadow:0 0 0 1px var(--lg-stroke), 0 4px 12px rgba(0,0,0,.15);  
+        }  
+        .card-title{ font-weight:700 }  
+        .muted{ color:var(--lg-text-muted) }  
+        .section-heading{ font-weight:800; letter-spacing:.2px }  
+        .track-link{ font-weight:600; color:inherit; text-decoration:none }  
+        .track-link:hover{ text-decoration:underline }  
+        .context-link{ color:var(--spotify-green)!important }  
+        
+        /* Chips & buttons */  
+        .pill{  
+          display:inline-flex; align-items:center; gap:.5rem;  
+          padding:.35rem .7rem; border-radius:999px;  
+          background:linear-gradient(180deg, color-mix(in oklab, var(--spotify-green) 12%, transparent), transparent);  
+          border:1px solid color-mix(in oklab, var(--spotify-green) 30%, var(--lg-stroke));  
+          color:var(--spotify-green); font-size:.85rem; font-weight:600;  
+          composes: lg-surface from none;  
+          --lg-blur: 4px;  
+        }  
+        .btn-success{  
+          background:linear-gradient(180deg, color-mix(in oklab, var(--spotify-green) 85%, white), var(--spotify-green));  
+          border:1px solid color-mix(in oklab, var(--spotify-green) 55%, white);  
+          color:#000; /* Better contrast */  
+          box-shadow:0 6px 20px rgba(29,185,84,.20), var(--lg-inner);  
+          border-radius:999px;  
+          composes: lg-hover lg-press from none;  
+        }  
+        .btn-success:hover{ filter:brightness(1.02) }  
+        .btn-ghost{  
+          background:linear-gradient(180deg, color-mix(in oklab, #ffffff 8%, transparent), transparent);  
+          border:1px solid var(--lg-stroke);  
+          color:inherit; border-radius:999px;  
+          composes: lg-surface lg-hover from none;  
+          --lg-blur: 4px;  
+        }  
+        .btn-ghost:hover{ border-color:var(--spotify-green); color:var(--spotify-green) }  
+        
+        /* Inputs */  
+        .form-outline .form-control{  
+          background: linear-gradient(180deg, color-mix(in oklab, var(--lg-surface) 95%, transparent), transparent);  
+          border:1px solid var(--lg-stroke);  
+          border-radius:12px; color:inherit;  
+          composes: lg-surface from none;  
+          --lg-blur: 4px;  
+        }  
+        .form-outline .form-control:focus{  
+          border-color: color-mix(in oklab, var(--spotify-green) 40%, var(--lg-stroke));  
+          box-shadow:0 0 0 .15rem color-mix(in oklab, var(--spotify-green) 12%, transparent);  
+        }  
+        .form-outline .form-control ~ .form-label{ color:var(--spotify-light) }  
+        
+        /* Tooltip & code */  
+        .tooltip-inner{ padding:.5rem .75rem; color:inherit; }  
+        .code-block{  
+          background: var(--lg-highlight);  
+          padding:.3rem .55rem; border-radius:.35rem;  
+          font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;  
+          font-size:.9rem;  
+        }  
+        html[data-mdb-theme='light'] .code-block{ background: rgba(0,0,0,.04); }  
+        
+        /* Empty state */  
+        .empty-state{  
+          border:1px dashed var(--lg-stroke);  
+          border-radius:.75rem; padding:2rem; text-align:center;  
+          composes: lg-surface from none;  
+          --lg-blur: 4px;  
+        }  
+        
+        /* Fallbacks */  
+        @supports not (backdrop-filter: blur(1px)){  
+          .lg-surface, .glass, .pill, .btn-ghost, .form-outline .form-control{  
+            backdrop-filter:none; -webkit-backdrop-filter:none;  
+            background: var(--lg-surface-solid);  
+            border:1px solid var(--lg-stroke);  
+            box-shadow: var(--lg-shadow);  
+          }  
+        }  
     </style>
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg glass">
+    <nav class="navbar navbar-expand-lg glass lg-surface lg-hover">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center" href="#">
                 <i class="fab fa-spotify me-2" style="color: var(--spotify-green);"></i>
@@ -179,7 +279,7 @@
         <!-- Cookie Input Form & FAQ -->
         <div id="cookie-form-container" class="row justify-content-center">
             <div class="col-12">
-                <div class="card glass">
+                <div class="card glass lg-surface lg-hover">
                     <div class="card-body p-4 p-md-5">
                         <div class="d-flex align-items-start justify-content-between mb-3">
                             <div>
@@ -194,7 +294,7 @@
                                 <label class="form-label" for="sp_dc_cookie_input">sp_dc Cookie Value</label>
                             </div>
                             <div class="d-grid d-sm-flex gap-2">
-                                <button type="submit" class="btn btn-success px-4" data-mdb-ripple-init>
+                                <button type="submit" class="btn btn-success px-4 lg-hover lg-press" data-mdb-ripple-init>
                                     <i class="fa-solid fa-lock me-2"></i>Save and Fetch Activity
                                 </button>
                             </div>
@@ -204,12 +304,12 @@
                         <div class="accordion mt-4" id="faqAccordion">
                             <div class="accordion-item glass">
                                 <h2 class="accordion-header" id="headingOne">
-                                    <button class="accordion-button collapsed" type="button" data-mdb-collapse-init data-mdb-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    <button class="accordion-button collapsed glass lg-surface lg-hover" type="button" data-mdb-collapse-init data-mdb-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                         <i class="fas fa-question-circle me-2"></i> What is this?
                                     </button>
                                 </h2>
                                 <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-mdb-parent="#faqAccordion">
-                                    <div class="accordion-body">
+                                    <div class="accordion-body glass lg-surface">
                                         This website shows the Friend Activity feed, a feature of the Spotify desktop app, in a clean, web-friendly view.
                                         <br><br>
                                         <strong>Requirements:</strong>
@@ -220,14 +320,14 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="accordion-item glass mt-2">
+                            <div class="accordion-item glass">
                                 <h2 class="accordion-header" id="headingTwo">
-                                    <button class="accordion-button collapsed" type="button" data-mdb-collapse-init data-mdb-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                    <button class="accordion-button collapsed glass lg-surface lg-hover" type="button" data-mdb-collapse-init data-mdb-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
                                         <i class="fas fa-cookie-bite me-2"></i> What is <code class="code-block">sp_dc</code> and how do I get it?
                                     </button>
                                 </h2>
                                 <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-mdb-parent="#faqAccordion">
-                                    <div class="accordion-body">
+                                    <div class="accordion-body glass lg-surface">
                                         The <code class="code-block">sp_dc</code> cookie is a long-term authentication token used to access your friend feed. It is only stored in your browser and never on our server.
                                         <hr class="my-3">
                                         <strong>Step 1:</strong> Log in to <a class="context-link" href="https://open.spotify.com" target="_blank">open.spotify.com</a> on desktop.
@@ -259,9 +359,9 @@
         <!-- Activity Display Area -->
         <div id="activity-container" class="d-none">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <button id="clear-cookie-btn" class="btn btn-sm btn-ghost" data-mdb-ripple-init><i class="fas fa-trash me-2"></i>Clear Cookie</button>
+                <button id="clear-cookie-btn" class="btn btn-sm btn-ghost lg-hover" data-mdb-ripple-init><i class="fas fa-trash me-2"></i>Clear Cookie</button>
                 <div class="d-flex gap-2">
-                    <button id="refresh-btn" class="btn btn-sm btn-success" data-mdb-ripple-init><i class="fas fa-rotate me-2"></i>Refresh</button>
+                    <button id="refresh-btn" class="btn btn-sm btn-success lg-hover lg-press" data-mdb-ripple-init><i class="fas fa-rotate me-2"></i>Refresh</button>
                 </div>
             </div>
 
@@ -276,7 +376,7 @@
                 <!-- Cards injected here -->
             </div>
 
-            <div id="empty" class="empty-state d-none mt-4">
+            <div id="empty" class="empty-state d-none mt-4 glass lg-surface">
                 <i class="fa-regular fa-face-smile-beam fa-2x mb-2" style="color: var(--spotify-green);"></i>
                 <p class="mb-0">No friend activity found.</p>
             </div>
@@ -373,7 +473,7 @@
                 const fullDate = friend.timestamp ? new Date(friend.timestamp).toLocaleString() : 'N/A';
                 return `
                 <div class="col-lg-6 col-xl-6">
-                    <div class="card h-100">
+                    <div class="card glass lg-surface lg-hover h-100">
                         <div class="card-body d-flex p-3">
                             <a href="${friend.user_url}" target="_blank" aria-label="${friend.user_name}">
                                 <img src="${friend.user_image_url}" class="rounded-circle avatar me-3" alt="${friend.user_name}" />
