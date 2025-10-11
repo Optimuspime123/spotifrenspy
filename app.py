@@ -5,14 +5,15 @@ import pyotp
 import base64
 from datetime import datetime
 from flask import Flask, render_template, request, jsonify
+import os
 
 app = Flask(__name__)
 
 # -----------------------------
 # Config
 # -----------------------------
-SECRETS_URL = "https://raw.githubusercontent.com/Thereallo1026/spotify-secrets/main/secrets/secrets.json"
-FALLBACK_SECRET = "4x]G -{$SKtXjMT2"  # v29, last known
+SECRETS_URL = os.environ.get("SECRETS_URL")
+FALLBACK_SECRET = os.environ.get("FALLBACK_SECRET")
 LATEST_SPOTIFY_SECRET = FALLBACK_SECRET
 
 # Refresh secrets every 6 hours
@@ -244,5 +245,6 @@ def get_activity():
 if __name__ == '__main__':
     # On Render/Gunicorn this block won't run; import-time fetch handles secrets there.
     app.run(debug=True, port=5001)
+
 
 
